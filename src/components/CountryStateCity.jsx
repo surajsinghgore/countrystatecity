@@ -65,7 +65,7 @@ const CountryStateCity = () => {
 
   return (
     <div className="p-4 space-y-4">
-      <h2 className="text-xl font-bold mb-4">Select Country, State, and City</h2>
+      <h2 className="text-xl font-bold mb-4 text-center">Select Country, State, and City</h2>
 
       {/* Country Dropdown */}
       <Dropdown
