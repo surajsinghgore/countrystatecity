@@ -5,9 +5,9 @@ const CountryStateCity = () => {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState('');
-  const [selectedState, setSelectedState] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedState, setSelectedState] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
 
   useEffect(() => {
     fetch('/countries.json')
@@ -27,21 +27,21 @@ const CountryStateCity = () => {
       fetch('/states.json')
         .then(response => response.json())
         .then(data => {
-          const filteredStates = data.filter(state => state.countryCode === selectedCountry);
+          const filteredStates = data.filter(state => state.countryCode === selectedCountry.code);
           setStates(filteredStates.map(state => ({
             name: state.name,
             code: state.isoCode
           })));
-          setSelectedState('');
-          setSelectedCity('');
+          setSelectedState(null);
+          setSelectedCity(null);
           setCities([]);
         })
         .catch(error => console.error('Error fetching states:', error));
     } else {
       setStates([]);
       setCities([]);
-      setSelectedState('');
-      setSelectedCity('');
+      setSelectedState(null);
+      setSelectedCity(null);
     }
   }, [selectedCountry]);
 
@@ -50,16 +50,16 @@ const CountryStateCity = () => {
       fetch('/cities.json')
         .then(response => response.json())
         .then(data => {
-          const filteredCities = data.filter(city => city.stateCode === selectedState && city.countryCode === selectedCountry);
+          const filteredCities = data.filter(city => city.stateCode === selectedState.code && city.countryCode === selectedCountry.code);
           setCities(filteredCities.map(city => ({
             name: city.name
           })));
-          setSelectedCity('');
+          setSelectedCity(null);
         })
         .catch(error => console.error('Error fetching cities:', error));
     } else {
       setCities([]);
-      setSelectedCity('');
+      setSelectedCity(null);
     }
   }, [selectedState, selectedCountry]);
 
@@ -70,9 +70,10 @@ const CountryStateCity = () => {
       {/* Country Dropdown */}
       <Dropdown
         data={countries.map(c => c.name)}
-        selectedValue={selectedCountry}
-        onChange={code => {
-          setSelectedCountry(countries.find(c => c.name === code)?.code || '');
+        selectedValue={selectedCountry?.name || ''}
+        onChange={name => {
+          const country = countries.find(c => c.name === name);
+          setSelectedCountry(country || null);
         }}
         placeholder="Select Country"
       />
@@ -80,9 +81,10 @@ const CountryStateCity = () => {
       {/* State Dropdown */}
       <Dropdown
         data={states.map(s => s.name)}
-        selectedValue={selectedState}
-        onChange={code => {
-          setSelectedState(states.find(s => s.name === code)?.code || '');
+        selectedValue={selectedState?.name || ''}
+        onChange={name => {
+          const state = states.find(s => s.name === name);
+          setSelectedState(state || null);
         }}
         placeholder="Select State"
         disabled={!selectedCountry}
@@ -91,7 +93,7 @@ const CountryStateCity = () => {
       {/* City Dropdown */}
       <Dropdown
         data={cities.map(c => c.name)}
-        selectedValue={selectedCity}
+        selectedValue={selectedCity || ''}
         onChange={setSelectedCity}
         placeholder="Select City"
         disabled={!selectedState}

@@ -4,6 +4,7 @@ const Dropdown = ({ data = [], selectedValue, onChange, placeholder, disabled })
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredData, setFilteredData] = useState(data);
+  const dropdownRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -13,6 +14,19 @@ const Dropdown = ({ data = [], selectedValue, onChange, placeholder, disabled })
       )
     );
   }, [searchTerm, data]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -28,7 +42,7 @@ const Dropdown = ({ data = [], selectedValue, onChange, placeholder, disabled })
   };
 
   return (
-    <div className="relative inline-block w-full">
+    <div className="relative inline-block w-full" ref={dropdownRef}>
       <button
         onClick={toggleDropdown}
         className={`w-full px-4 py-2 text-left bg-blue-500 text-white rounded-lg shadow-md focus:outline-none ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} hover:bg-blue-600`}
@@ -37,7 +51,7 @@ const Dropdown = ({ data = [], selectedValue, onChange, placeholder, disabled })
         {selectedValue || placeholder}
       </button>
       {isOpen && (
-        <div className="absolute mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-40" >
+        <div className="absolute mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-40">
           <input
             type="text"
             placeholder="Search..."
