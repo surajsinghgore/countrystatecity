@@ -5,9 +5,7 @@ import CountryStateCity from './components/CountryStateCity';
 const App = () => {
   return (
     <div>
-      <header>
-        <h1>Country, State, and City Selector</h1>
-      </header>
+        <h5 className='text-red-800 text-lg'>Country, State, and City Selector</h5>
       <main>
         <CountryStateCity />
       </main>

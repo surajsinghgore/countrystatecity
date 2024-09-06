@@ -1,130 +1,100 @@
-// CountryStateCity.js
-import React, { useState, useEffect } from "react";
-import Country from "./Country";
-import State from "./State";
-import City from "./City";
+import React, { useState, useEffect } from 'react';
+import Dropdown from './Dropdown';
 
 const CountryStateCity = () => {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedState, setSelectedState] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
-
-  const [fullCountryData, setFullCountryData] = useState(null);
-  const [fullStateData, setFullStateData] = useState(null);
-  const [fullCityData, setFullCityData] = useState(null);
-
-  // State code mapping
-  const [stateCodeMap, setStateCodeMap] = useState({});
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
 
   useEffect(() => {
-    // Fetch countries data
-    fetch("/countries.json")
-      .then((response) => response.json())
-      .then((data) => setCountries(data));
+    fetch('/countries.json')
+      .then(response => response.json())
+      .then(data => {
+        const countryList = data.map(country => ({
+          name: country.name,
+          code: country.isoCode
+        }));
+        setCountries(countryList);
+      })
+      .catch(error => console.error('Error fetching countries:', error));
   }, []);
 
   useEffect(() => {
     if (selectedCountry) {
-      // Fetch states data based on the selected country
-      fetch("/states.json")
-        .then((response) => response.json())
-        .then((data) => {
-          const filteredStates = data.filter((state) => state.countryCode === selectedCountry);
-          setStates(filteredStates);
-
-          // Create a mapping from state names to state codes
-          const newStateCodeMap = {};
-          filteredStates.forEach((state) => {
-            newStateCodeMap[state.name] = state.isoCode;
-          });
-          setStateCodeMap(newStateCodeMap);
-
-          // Set full country data
-          const countryData = countries.find((country) => country.isoCode === selectedCountry);
-          setFullCountryData(countryData);
-        });
+      fetch('/states.json')
+        .then(response => response.json())
+        .then(data => {
+          const filteredStates = data.filter(state => state.countryCode === selectedCountry);
+          setStates(filteredStates.map(state => ({
+            name: state.name,
+            code: state.isoCode
+          })));
+          setSelectedState('');
+          setSelectedCity('');
+          setCities([]);
+        })
+        .catch(error => console.error('Error fetching states:', error));
+    } else {
+      setStates([]);
+      setCities([]);
+      setSelectedState('');
+      setSelectedCity('');
     }
-  }, [selectedCountry, countries]);
+  }, [selectedCountry]);
 
   useEffect(() => {
     if (selectedState) {
-      // Fetch cities data based on the selected state name and country
-      fetch("/cities.json")
-        .then((response) => response.json())
-        .then((data) => {
-          const filteredCities = data.filter((city) => {
-            const stateCode = stateCodeMap[selectedState];
-            return city.stateCode === stateCode && city.countryCode === selectedCountry;
-          });
-          setCities(filteredCities);
-
-          // Set full state data
-          const stateData = states.find((state) => state.name === selectedState);
-          setFullStateData(stateData);
-
-          // Set full city data
-          const cityData = filteredCities.find((city) => city.name === selectedCity);
-          setFullCityData(cityData);
-        });
+      fetch('/cities.json')
+        .then(response => response.json())
+        .then(data => {
+          const filteredCities = data.filter(city => city.stateCode === selectedState && city.countryCode === selectedCountry);
+          setCities(filteredCities.map(city => ({
+            name: city.name
+          })));
+          setSelectedCity('');
+        })
+        .catch(error => console.error('Error fetching cities:', error));
     } else {
-      setCities([]); // Clear cities when no state is selected
-      setFullStateData(null);
-      setFullCityData(null);
+      setCities([]);
+      setSelectedCity('');
     }
-  }, [selectedState, selectedCountry, stateCodeMap, states]);
-
-  useEffect(() => {
-    if (selectedCity) {
-      fetch("/cities.json")
-        .then((response) => response.json())
-        .then((data) => {
-          const cityData = data.find((city) => city.name === selectedCity && city.stateCode === stateCodeMap[selectedState] && city.countryCode === selectedCountry);
-          setFullCityData(cityData);
-        });
-    } else {
-      setFullCityData(null);
-    }
-  }, [selectedCity, selectedState, selectedCountry, stateCodeMap]);
-
-  const handleCountryChange = (country) => {
-    setSelectedCountry(country);
-    setSelectedState("");
-    setSelectedCity("");
-  };
-
-  const handleStateChange = (state) => {
-    setSelectedState(state);
-    setSelectedCity("");
-  };
-
-  const handleCityChange = (city) => {
-    setSelectedCity(city);
-  };
+  }, [selectedState, selectedCountry]);
 
   return (
-    <div>
-      <h2>Select Country, State, and City</h2>
+    <div className="p-4 space-y-4">
+      <h2 className="text-xl font-bold mb-4">Select Country, State, and City</h2>
 
-      {/* Country Component */}
-      <Country countries={countries} selectedCountry={selectedCountry} onCountryChange={handleCountryChange} />
-
-      {/* State Component */}
-      <State
-        states={states.map((state) => state.name)}
-        selectedState={selectedState}
-        onStateChange={handleStateChange}
-        disabled={!selectedCountry} // Disable if no country is selected
+      {/* Country Dropdown */}
+      <Dropdown
+        data={countries.map(c => c.name)}
+        selectedValue={selectedCountry}
+        onChange={code => {
+          setSelectedCountry(countries.find(c => c.name === code)?.code || '');
+        }}
+        placeholder="Select Country"
       />
 
-      {/* City Component */}
-      <City
-        cities={cities.map((city) => city.name)}
-        selectedCity={selectedCity}
-        onCityChange={handleCityChange}
-        disabled={!selectedState} // Disable if no state is selected
+      {/* State Dropdown */}
+      <Dropdown
+        data={states.map(s => s.name)}
+        selectedValue={selectedState}
+        onChange={code => {
+          setSelectedState(states.find(s => s.name === code)?.code || '');
+        }}
+        placeholder="Select State"
+        disabled={!selectedCountry}
+      />
+
+      {/* City Dropdown */}
+      <Dropdown
+        data={cities.map(c => c.name)}
+        selectedValue={selectedCity}
+        onChange={setSelectedCity}
+        placeholder="Select City"
+        disabled={!selectedState}
       />
     </div>
   );
